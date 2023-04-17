@@ -1,0 +1,125 @@
+const express = require("express");
+const { PrismaClient } = require("@prisma/client");
+const { checkAuthMiddleWare } = require("../util/auth");
+
+const router = express.Router();
+const prisma = new PrismaClient();
+
+router
+  .route("/posts")
+  .get(async (req, res) => {
+    const posts = await prisma.posts.findMany({
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+    res.json(posts);
+  })
+  .post(checkAuthMiddleWare, async (req, res) => {
+    console.log(req.body);
+    const curUser = await prisma.users.findUnique({
+      where: {
+        username: req.token.username,
+      },
+    });
+    if (curUser.id === req.body.userID) {
+      const data = req.body;
+      const post = await prisma.posts.create({
+        data,
+      });
+      res.status(201).json({ message: "Post created successfully", post });
+    } else
+      res.status(401).json({
+        message: "Not authorized",
+        errors: {
+          hacking:
+            "You are not allowed to create posts for other users. But you already know that anyway, don't you?",
+        },
+      });
+  });
+
+router
+  .route("/posts/:id")
+  .get(checkAuthMiddleWare, async (req, res) => {
+    const id = req.params.id;
+    const post = await prisma.posts.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+    const curUser = await prisma.users.findUnique({
+      where: {
+        username: req.token.username,
+      },
+    });
+    if (post.userID === curUser.id) res.json(post);
+    else
+      res.status(401).json({
+        message: "Not authorized.",
+        errors: { spying: "You are not allowed to view other user's posts! Mind your business." },
+      });
+  })
+  .patch(checkAuthMiddleWare, async (req, res) => {
+    const id = req.params.id;
+    const post = await prisma.posts.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+    const curUser = await prisma.users.findUnique({
+      where: {
+        username: req.token.username,
+      },
+    });
+    if (post.userID === curUser.id) {
+      const updatedPost = await prisma.posts.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          userID: req.body.userID,
+          message: req.body.message,
+          image: req.body.image,
+          updatedAt: req.body.updatedAt,
+        },
+      });
+      res.status(201).json({ message: `Post ${id} updated successfully`, updatedPost });
+    } else
+      res.status(401).json({
+        message: "Not authorized.",
+        errors: {
+          hacking:
+            "You are not allowed to edit posts of other users. But you already know that anyway, don't you?",
+        },
+      });
+  })
+  .delete(checkAuthMiddleWare, async (req, res) => {
+    const postID = req.params.id;
+    const curPost = await prisma.posts.findUnique({
+      where: {
+        id: Number(postID),
+      },
+    });
+    const curUser = await prisma.users.findUnique({
+      where: {
+        username: req.token.username,
+      },
+    });
+    if (curPost.userID === curUser.id || req.token.admin) {
+      const post = await prisma.posts.delete({
+        where: {
+          id: Number(postID),
+        },
+      });
+      res.status(201).json({ message: `Post ${postID} deleted successfully`, post });
+    } else
+      res.status(401).json({
+        message: "Not authorized.",
+        errors: {
+          hacking:
+            "You are not allowed to delete posts of other users. But you already know that anyway, don't you?",
+        },
+      });
+  });
+
+module.exports = router;

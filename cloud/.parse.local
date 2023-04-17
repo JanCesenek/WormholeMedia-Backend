@@ -1,0 +1,10 @@
+{
+  "applications": {
+    "WormholeMedia-Backend": {
+      "applicationId": "BxzWRTKVpASfYYmKvi9vWsM8KpDAZCqPkTd2E7DY"
+    },
+    "_default": {
+      "link": "WormholeMedia-Backend"
+    }
+  }
+}
