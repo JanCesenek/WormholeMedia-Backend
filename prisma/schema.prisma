@@ -65,7 +65,6 @@ model users {
   lastName                                       String           @db.VarChar
   username                                       String           @unique @db.VarChar
   password                                       String           @db.VarChar
-  age                                            Int
   gender                                         users_gender?    @default(M)
   race                                           String           @db.VarChar
   birthDate                                      DateTime         @db.Date
