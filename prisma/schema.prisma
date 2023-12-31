@@ -79,6 +79,7 @@ model posts {
   updatedAt                   DateTime   @default(now()) @db.Timestamptz(6)
   shared                      Boolean?   @default(false)
   sharedBy                    Int?
+  sharedMessage               String?    @db.VarChar
   comments                    comments[]
   dislikes                    dislikes[]
   likes                       likes[]

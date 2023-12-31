@@ -1,3 +1,9 @@
+require("dotenv/config");
+const jwt = require("jsonwebtoken");
+
+const token = jwt.sign("wormholemedia", `${process.env.JWT_KEY}`);
+console.log(token);
+
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");

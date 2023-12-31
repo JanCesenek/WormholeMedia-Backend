@@ -16,14 +16,14 @@ router
     res.json(posts);
   })
   .post(checkAuthMiddleWare, async (req, res) => {
-    console.log(req.body);
+    const data = req.body;
+    console.log(data);
     const curUser = await prisma.users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    if (curUser.id === req.body.userID) {
-      const data = req.body;
+    if (curUser.id === data.userID || (data.shared && curUser.id !== data.userID)) {
       const post = await prisma.posts.create({
         data,
       });
@@ -71,7 +71,7 @@ router
         username: req.token.username,
       },
     });
-    if (post.userID === curUser.id) {
+    if (post.userID === curUser.id && !post.shared) {
       const updatedPost = await prisma.posts.update({
         where: {
           id: Number(id),
@@ -105,7 +105,11 @@ router
         username: req.token.username,
       },
     });
-    if (curPost.userID === curUser.id || req.token.admin) {
+    if (
+      curPost.userID === curUser.id ||
+      req.token.admin ||
+      (curPost.userID !== curUser.id && curPost.sharedBy === curUser.id)
+    ) {
       const post = await prisma.posts.delete({
         where: {
           id: Number(postID),
