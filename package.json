@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.802.0",
     "@prisma/client": "^4.10.1",
     "@reduxjs/toolkit": "^1.9.3",
     "@supabase/supabase-js": "^2.14.0",
