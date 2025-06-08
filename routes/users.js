@@ -5,7 +5,7 @@ const router = express.Router();
 const prisma = require("./prisma");
 
 router.get("/users", async (req, res) => {
-  const users = await prisma.users.findMany({
+  const users = await prisma.social_users.findMany({
     orderBy: {
       id: "asc",
     },
@@ -17,7 +17,7 @@ router
   .route("/users/:username")
   .get(checkAuthMiddleWare, async (req, res) => {
     const username = req.params.username;
-    const user = await prisma.users.findUnique({
+    const user = await prisma.social_users.findUnique({
       where: {
         username,
       },
@@ -34,7 +34,7 @@ router
   .patch(checkAuthMiddleWare, async (req, res) => {
     const username = req.params.username;
     console.log(req.body);
-    const user = await prisma.users.findUnique({
+    const user = await prisma.social_users.findUnique({
       where: {
         username,
       },
@@ -43,7 +43,7 @@ router
       ? { origin: req.body.origin }
       : { profilePicture: req.body.profilePicture };
     if (user.username === req.token.username) {
-      const updatedUser = await prisma.users.update({
+      const updatedUser = await prisma.social_users.update({
         where: {
           username,
         },
@@ -64,13 +64,13 @@ router
   })
   .delete(checkAuthMiddleWare, async (req, res) => {
     const username = req.params.username;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username,
       },
     });
     if (curUser.username === req.token.username || req.token.admin) {
-      const user = await prisma.users.delete({
+      const user = await prisma.social_users.delete({
         where: {
           username,
         },

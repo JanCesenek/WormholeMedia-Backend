@@ -7,7 +7,7 @@ const prisma = require("./prisma");
 router
   .route("/messages")
   .get(async (req, res) => {
-    const messages = await prisma.messages.findMany({
+    const messages = await prisma.social_messages.findMany({
       orderBy: {
         createdAt: "asc",
       },
@@ -16,13 +16,13 @@ router
   })
   .post(checkAuthMiddleWare, async (req, res) => {
     console.log(req.body);
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
     if (curUser.id === req.body.senderID) {
-      const message = await prisma.messages.create({
+      const message = await prisma.social_messages.create({
         data: req.body,
       });
       res.status(201).json({ message: "Message sent successfully.", createdMsg: message });
@@ -38,13 +38,13 @@ router
   .patch(checkAuthMiddleWare, async (req, res) => {
     const id = req.body.id;
     const senderID = req.body.senderID;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
     if (curUser.id === id) {
-      const readMessages = await prisma.messages.updateMany({
+      const readMessages = await prisma.social_messages.updateMany({
         where: {
           recipientID: id,
           senderID,
@@ -61,12 +61,12 @@ router
   .route("/messages/:id")
   .get(checkAuthMiddleWare, async (req, res) => {
     const id = req.params.id;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const message = await prisma.messages.findUnique({
+    const message = await prisma.social_messages.findUnique({
       where: {
         id: Number(id),
       },
@@ -82,18 +82,18 @@ router
   })
   .delete(checkAuthMiddleWare, async (req, res) => {
     const id = req.params.id;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const curMessage = await prisma.messages.findUnique({
+    const curMessage = await prisma.social_messages.findUnique({
       where: {
         id: Number(id),
       },
     });
     if (curUser.id === curMessage.senderID) {
-      const message = await prisma.messages.delete({
+      const message = await prisma.social_messages.delete({
         where: {
           id: Number(id),
         },

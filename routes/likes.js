@@ -7,17 +7,17 @@ const prisma = require("./prisma");
 router
   .route("/likes")
   .get(async (req, res) => {
-    const likes = await prisma.likes.findMany();
+    const likes = await prisma.social_likes.findMany();
     res.json(likes);
   })
   .post(checkAuthMiddleWare, async (req, res) => {
     console.log(req.body);
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const alreadyLiked = await prisma.likes.findMany({
+    const alreadyLiked = await prisma.social_likes.findMany({
       where: {
         postID: req.body.postID,
         userID: curUser.id,
@@ -32,7 +32,7 @@ router
       });
     }
     if (curUser.id === req.body.userID) {
-      const like = await prisma.likes.create({
+      const like = await prisma.social_likes.create({
         data: req.body,
       });
       res.status(201).json({ message: "Post liked successfully.", like });
@@ -50,12 +50,12 @@ router
   .route("/likes/:id")
   .get(checkAuthMiddleWare, async (req, res) => {
     const id = req.params.id;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const like = await prisma.likes.findUnique({
+    const like = await prisma.social_likes.findUnique({
       where: {
         id: Number(id),
       },
@@ -71,18 +71,18 @@ router
   })
   .delete(checkAuthMiddleWare, async (req, res) => {
     const id = req.params.id;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const curLike = await prisma.likes.findUnique({
+    const curLike = await prisma.social_likes.findUnique({
       where: {
         id: Number(id),
       },
     });
     if (curUser.id === curLike.userID) {
-      const like = await prisma.likes.delete({
+      const like = await prisma.social_likes.delete({
         where: {
           id: Number(id),
         },

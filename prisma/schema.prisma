@@ -3,117 +3,206 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-model blockList {
-  id                             Int   @id @unique @default(autoincrement())
-  blocker                        Int
-  blocked                        Int
-  users_blockList_blockedTousers users @relation("blockList_blockedTousers", fields: [blocked], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users_blockList_blockerTousers users @relation("blockList_blockerTousers", fields: [blocker], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model cook_articles {
+  id         Int        @id @default(autoincrement())
+  title      String
+  category   String
+  createdAt  DateTime?  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  userID     Int
+  content    Json       @db.Json
+  image      String
+  cook_users cook_users @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model comments {
-  id        Int       @id @unique @default(autoincrement())
-  postID    Int
-  userID    Int
-  image     String?   @db.VarChar
-  message   String?   @db.VarChar
-  createdAt DateTime? @default(now()) @db.Timestamptz(6)
-  posts     posts     @relation(fields: [postID], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users     users     @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model cook_images {
+  id        Int    @id(map: "cook-images_pkey") @unique(map: "cook-images_id_key") @default(autoincrement())
+  productID Int
+  url       String
+  uniqueID  String
 }
 
-model dislikes {
-  id     Int   @id @unique @default(autoincrement())
-  postID Int
-  userID Int
-  posts  posts @relation(fields: [postID], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users  users @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model cook_orders {
+  id            Int         @id(map: "cook-units_pkey") @unique(map: "cook-units_id_key") @default(autoincrement())
+  paymentMethod String
+  totalAmount   Decimal     @db.Decimal
+  createdAt     DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  updatedAt     DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  userID        Int?
+  phone         String
+  email         String
+  name          String
+  street        String
+  postcode      String
+  town          String
+  unitsID       String
+  cook_users    cook_users? @relation(fields: [userID], references: [id], onUpdate: NoAction, map: "cook-units_userID_fkey")
 }
 
-model friendList {
-  id                                 Int   @id(map: "friendlist_pkey") @unique(map: "friendlist_id_key") @default(autoincrement())
-  firstUser                          Int
-  secondUser                         Int
-  users_friendList_firstUserTousers  users @relation("friendList_firstUserTousers", fields: [firstUser], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users_friendList_secondUserTousers users @relation("friendList_secondUserTousers", fields: [secondUser], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model cook_products {
+  id          Int          @id(map: "cook-products_pkey") @unique(map: "cook-products_id_key") @default(autoincrement())
+  title       String
+  description String?
+  price       Decimal      @db.Decimal
+  quantity    Int          @db.SmallInt
+  image       String
+  category    String
+  createdAt   DateTime?    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  uniqueID    String?
+  cook_units  cook_units[]
 }
 
-model friendRequests {
-  id                                    Int   @id @unique @default(autoincrement())
-  sender                                Int
-  recipient                             Int
-  users_friendRequests_recipientTousers users @relation("friendRequests_recipientTousers", fields: [recipient], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users_friendRequests_senderTousers    users @relation("friendRequests_senderTousers", fields: [sender], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model cook_reviews {
+  id         Int        @id @default(autoincrement())
+  userID     Int
+  createdAt  DateTime?  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  rating     Float      @db.Real
+  message    String?
+  cook_users cook_users @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model likes {
-  id     Int   @id @unique @default(autoincrement())
-  postID Int
-  userID Int
-  posts  posts @relation(fields: [postID], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users  users @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model cook_units {
+  id            Int            @id(map: "cook-units_pkey1") @unique(map: "cook-units_id_key1") @default(autoincrement())
+  userID        Int?
+  orderID       String?
+  productID     Int?
+  quantity      Int            @db.SmallInt
+  processed     Boolean?       @default(false)
+  delivery      String?
+  uniqueID      String
+  paymentMethod String?
+  cook_products cook_products? @relation(fields: [productID], references: [id], onUpdate: NoAction, map: "cook-units_productID_fkey")
+  cook_users    cook_users?    @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cook-units_userID_fkey1")
 }
 
-model messages {
-  id                                Int      @id @unique @default(autoincrement())
-  senderID                          Int
-  recipientID                       Int
-  message                           String?  @db.VarChar
-  image                             String?  @db.VarChar
-  createdAt                         DateTime @default(now()) @db.Timestamptz(6)
-  read                              Boolean  @default(false)
-  users_messages_recipientIDTousers users    @relation("messages_recipientIDTousers", fields: [recipientID], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users_messages_senderIDTousers    users    @relation("messages_senderIDTousers", fields: [senderID], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model cook_users {
+  id            Int             @id(map: "cook-users_pkey") @unique(map: "cook-users_id_key") @default(autoincrement())
+  firstName     String
+  lastName      String
+  username      String          @unique(map: "cook-users_username_key")
+  password      String
+  street        String
+  postcode      String
+  town          String
+  email         String
+  phone         String
+  admin         Boolean?        @default(false)
+  cook_articles cook_articles[]
+  cook_orders   cook_orders[]
+  cook_reviews  cook_reviews[]
+  cook_units    cook_units[]
 }
 
-model posts {
-  id                          Int        @id @unique @default(autoincrement())
-  userID                      Int
-  message                     String     @db.VarChar
-  image                       String?    @db.VarChar
-  createdAt                   DateTime   @default(now()) @db.Timestamptz(6)
-  updatedAt                   DateTime   @default(now()) @db.Timestamptz(6)
-  shared                      Boolean?   @default(false)
-  sharedBy                    Int?
-  sharedMessage               String?    @db.VarChar
-  comments                    comments[]
-  dislikes                    dislikes[]
-  likes                       likes[]
-  users_posts_sharedByTousers users?     @relation("posts_sharedByTousers", fields: [sharedBy], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users                       users      @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model social_blockList {
+  id                                                  Int          @id(map: "blockList_pkey") @unique(map: "blockList_id_key") @default(autoincrement())
+  blocker                                             Int
+  blocked                                             Int
+  social_users_social_blockList_blockedTosocial_users social_users @relation("social_blockList_blockedTosocial_users", fields: [blocked], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blockList_blocked_fkey")
+  social_users_social_blockList_blockerTosocial_users social_users @relation("social_blockList_blockerTosocial_users", fields: [blocker], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blockList_blocker_fkey")
 }
 
-model users {
-  id                                             Int              @id @unique @default(autoincrement())
-  firstName                                      String           @db.VarChar
-  lastName                                       String           @db.VarChar
-  username                                       String           @unique @db.VarChar
-  password                                       String           @db.VarChar
-  gender                                         users_gender?    @default(M)
-  race                                           String           @db.VarChar
-  birthDate                                      DateTime         @db.Date
-  occupation                                     String           @db.VarChar
-  profilePicture                                 String?          @db.VarChar
-  origin                                         String           @db.VarChar
-  admin                                          Boolean?         @default(false)
-  blockList_blockList_blockedTousers             blockList[]      @relation("blockList_blockedTousers")
-  blockList_blockList_blockerTousers             blockList[]      @relation("blockList_blockerTousers")
-  comments                                       comments[]
-  dislikes                                       dislikes[]
-  friendList_friendList_firstUserTousers         friendList[]     @relation("friendList_firstUserTousers")
-  friendList_friendList_secondUserTousers        friendList[]     @relation("friendList_secondUserTousers")
-  friendRequests_friendRequests_recipientTousers friendRequests[] @relation("friendRequests_recipientTousers")
-  friendRequests_friendRequests_senderTousers    friendRequests[] @relation("friendRequests_senderTousers")
-  likes                                          likes[]
-  messages_messages_recipientIDTousers           messages[]       @relation("messages_recipientIDTousers")
-  messages_messages_senderIDTousers              messages[]       @relation("messages_senderIDTousers")
-  posts_posts_sharedByTousers                    posts[]          @relation("posts_sharedByTousers")
-  posts                                          posts[]
+model social_comments {
+  id           Int          @id(map: "comments_pkey") @unique(map: "comments_id_key") @default(autoincrement())
+  postID       Int
+  userID       Int
+  image        String?      @db.VarChar
+  message      String?      @db.VarChar
+  createdAt    DateTime?    @default(now()) @db.Timestamptz(6)
+  social_posts social_posts @relation(fields: [postID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_postID_fkey")
+  social_users social_users @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_userID_fkey")
+}
+
+model social_dislikes {
+  id           Int          @id(map: "dislikes_pkey") @unique(map: "dislikes_id_key") @default(autoincrement())
+  postID       Int
+  userID       Int
+  social_posts social_posts @relation(fields: [postID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "dislikes_postID_fkey")
+  social_users social_users @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "dislikes_userID_fkey")
+}
+
+model social_friendList {
+  id                                                      Int          @id(map: "friendlist_pkey") @unique(map: "friendlist_id_key") @default(autoincrement())
+  firstUser                                               Int
+  secondUser                                              Int
+  social_users_social_friendList_firstUserTosocial_users  social_users @relation("social_friendList_firstUserTosocial_users", fields: [firstUser], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "friendList_firstUser_fkey")
+  social_users_social_friendList_secondUserTosocial_users social_users @relation("social_friendList_secondUserTosocial_users", fields: [secondUser], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "friendList_secondUser_fkey")
+}
+
+model social_friendRequests {
+  id                                                         Int          @id(map: "friendRequests_pkey") @unique(map: "friendRequests_id_key") @default(autoincrement())
+  sender                                                     Int
+  recipient                                                  Int
+  social_users_social_friendRequests_recipientTosocial_users social_users @relation("social_friendRequests_recipientTosocial_users", fields: [recipient], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "friendRequests_recipient_fkey")
+  social_users_social_friendRequests_senderTosocial_users    social_users @relation("social_friendRequests_senderTosocial_users", fields: [sender], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "friendRequests_sender_fkey")
+}
+
+model social_likes {
+  id           Int          @id(map: "likes_pkey") @unique(map: "likes_id_key") @default(autoincrement())
+  postID       Int
+  userID       Int
+  social_posts social_posts @relation(fields: [postID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "likes_postID_fkey")
+  social_users social_users @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "likes_userID_fkey")
+}
+
+model social_messages {
+  id                                                     Int          @id(map: "messages_pkey") @unique(map: "messages_id_key") @default(autoincrement())
+  senderID                                               Int
+  recipientID                                            Int
+  message                                                String?      @db.VarChar
+  image                                                  String?      @db.VarChar
+  createdAt                                              DateTime     @default(now()) @db.Timestamptz(6)
+  read                                                   Boolean      @default(false)
+  social_users_social_messages_recipientIDTosocial_users social_users @relation("social_messages_recipientIDTosocial_users", fields: [recipientID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "messages_recipientID_fkey")
+  social_users_social_messages_senderIDTosocial_users    social_users @relation("social_messages_senderIDTosocial_users", fields: [senderID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "messages_senderID_fkey")
+}
+
+model social_posts {
+  id                                               Int               @id(map: "posts_pkey") @unique(map: "posts_id_key") @default(autoincrement())
+  userID                                           Int
+  message                                          String            @db.VarChar
+  image                                            String?           @db.VarChar
+  createdAt                                        DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt                                        DateTime          @default(now()) @db.Timestamptz(6)
+  shared                                           Boolean?          @default(false)
+  sharedBy                                         Int?
+  sharedMessage                                    String?           @db.VarChar
+  social_comments                                  social_comments[]
+  social_dislikes                                  social_dislikes[]
+  social_likes                                     social_likes[]
+  social_users_social_posts_sharedByTosocial_users social_users?     @relation("social_posts_sharedByTosocial_users", fields: [sharedBy], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "posts_sharedBy_fkey")
+  social_users_social_posts_userIDTosocial_users   social_users      @relation("social_posts_userIDTosocial_users", fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "posts_userID_fkey")
+}
+
+model social_users {
+  id                                                                  Int                     @id(map: "users_pkey") @unique(map: "users_id_key") @default(autoincrement())
+  firstName                                                           String                  @db.VarChar
+  lastName                                                            String                  @db.VarChar
+  username                                                            String                  @unique(map: "users_username_key") @db.VarChar
+  password                                                            String                  @db.VarChar
+  gender                                                              users_gender?           @default(M)
+  race                                                                String                  @db.VarChar
+  birthDate                                                           DateTime                @db.Date
+  occupation                                                          String                  @db.VarChar
+  profilePicture                                                      String?                 @db.VarChar
+  origin                                                              String                  @db.VarChar
+  admin                                                               Boolean?                @default(false)
+  social_blockList_social_blockList_blockedTosocial_users             social_blockList[]      @relation("social_blockList_blockedTosocial_users")
+  social_blockList_social_blockList_blockerTosocial_users             social_blockList[]      @relation("social_blockList_blockerTosocial_users")
+  social_comments                                                     social_comments[]
+  social_dislikes                                                     social_dislikes[]
+  social_friendList_social_friendList_firstUserTosocial_users         social_friendList[]     @relation("social_friendList_firstUserTosocial_users")
+  social_friendList_social_friendList_secondUserTosocial_users        social_friendList[]     @relation("social_friendList_secondUserTosocial_users")
+  social_friendRequests_social_friendRequests_recipientTosocial_users social_friendRequests[] @relation("social_friendRequests_recipientTosocial_users")
+  social_friendRequests_social_friendRequests_senderTosocial_users    social_friendRequests[] @relation("social_friendRequests_senderTosocial_users")
+  social_likes                                                        social_likes[]
+  social_messages_social_messages_recipientIDTosocial_users           social_messages[]       @relation("social_messages_recipientIDTosocial_users")
+  social_messages_social_messages_senderIDTosocial_users              social_messages[]       @relation("social_messages_senderIDTosocial_users")
+  social_posts_social_posts_sharedByTosocial_users                    social_posts[]          @relation("social_posts_sharedByTosocial_users")
+  social_posts_social_posts_userIDTosocial_users                      social_posts[]          @relation("social_posts_userIDTosocial_users")
 }
 
 enum users_gender {

@@ -7,7 +7,7 @@ const prisma = require("./prisma");
 router
   .route("/posts")
   .get(async (req, res) => {
-    const posts = await prisma.posts.findMany({
+    const posts = await prisma.social_posts.findMany({
       orderBy: {
         updatedAt: "desc",
       },
@@ -17,13 +17,13 @@ router
   .post(checkAuthMiddleWare, async (req, res) => {
     const data = req.body;
     console.log(data);
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
     if (curUser.id === data.userID || (data.shared && curUser.id !== data.userID)) {
-      const post = await prisma.posts.create({
+      const post = await prisma.social_posts.create({
         data,
       });
       res.status(201).json({ message: "Post created successfully", post });
@@ -41,12 +41,12 @@ router
   .route("/posts/:id")
   .get(checkAuthMiddleWare, async (req, res) => {
     const id = req.params.id;
-    const post = await prisma.posts.findUnique({
+    const post = await prisma.social_posts.findUnique({
       where: {
         id: Number(id),
       },
     });
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
@@ -60,18 +60,18 @@ router
   })
   .patch(checkAuthMiddleWare, async (req, res) => {
     const id = req.params.id;
-    const post = await prisma.posts.findUnique({
+    const post = await prisma.social_posts.findUnique({
       where: {
         id: Number(id),
       },
     });
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
     if (post.userID === curUser.id && !post.shared) {
-      const updatedPost = await prisma.posts.update({
+      const updatedPost = await prisma.social_posts.update({
         where: {
           id: Number(id),
         },
@@ -94,12 +94,12 @@ router
   })
   .delete(checkAuthMiddleWare, async (req, res) => {
     const postID = req.params.id;
-    const curPost = await prisma.posts.findUnique({
+    const curPost = await prisma.social_posts.findUnique({
       where: {
         id: Number(postID),
       },
     });
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
@@ -109,7 +109,7 @@ router
       req.token.admin ||
       (curPost.userID !== curUser.id && curPost.sharedBy === curUser.id)
     ) {
-      const post = await prisma.posts.delete({
+      const post = await prisma.social_posts.delete({
         where: {
           id: Number(postID),
         },

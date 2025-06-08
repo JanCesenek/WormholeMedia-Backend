@@ -22,7 +22,7 @@ router.post("/signup", async (req, res, next) => {
     errors.username = "Invalid username.";
   } else {
     try {
-      const existingUser = await prisma.users.findUnique({
+      const existingUser = await prisma.social_users.findUnique({
         where: {
           username,
         },
@@ -96,7 +96,7 @@ router.post("/signup", async (req, res, next) => {
   data.password = (await hash(data.password, 16)).toString();
 
   try {
-    const createdUser = await prisma.users.create({
+    const createdUser = await prisma.social_users.create({
       data,
     });
     console.log(createdUser);

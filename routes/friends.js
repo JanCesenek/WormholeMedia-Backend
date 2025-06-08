@@ -7,16 +7,16 @@ const prisma = require("./prisma");
 router
   .route("/friendList")
   .get(async (req, res) => {
-    const friendList = await prisma.friendList.findMany();
+    const friendList = await prisma.social_friendList.findMany();
     res.json(friendList);
   })
   .post(checkAuthMiddleWare, async (req, res) => {
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const duplicates = await prisma.friendList.findMany({
+    const duplicates = await prisma.social_friendList.findMany({
       where: {
         OR: [
           {
@@ -39,7 +39,7 @@ router
       });
     } else if (req.body.firstUser === curUser.id || req.body.secondUser === curUser.id) {
       const data = req.body;
-      const newFriend = await prisma.friendList.create({
+      const newFriend = await prisma.social_friendList.create({
         data,
       });
       res.status(201).json({ message: "Friend added successfully!", newFriend });
@@ -55,13 +55,13 @@ router
 router.delete("/friendList/:id/:deletingUser", checkAuthMiddleWare, async (req, res) => {
   const id = Number(req.params.id);
   const deletingUser = Number(req.params.deletingUser);
-  const curUser = await prisma.users.findUnique({
+  const curUser = await prisma.social_users.findUnique({
     where: {
       username: req.token.username,
     },
   });
   if (deletingUser === curUser.id) {
-    const deletedFriend = await prisma.friendList.delete({
+    const deletedFriend = await prisma.social_friendList.delete({
       where: {
         id,
       },
@@ -79,16 +79,16 @@ router.delete("/friendList/:id/:deletingUser", checkAuthMiddleWare, async (req, 
 router
   .route("/friendRequests")
   .get(async (req, res) => {
-    const friendRequests = await prisma.friendRequests.findMany();
+    const friendRequests = await prisma.social_friendRequests.findMany();
     res.json(friendRequests);
   })
   .post(checkAuthMiddleWare, async (req, res) => {
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const duplicates = await prisma.friendRequests.findMany({
+    const duplicates = await prisma.social_friendRequests.findMany({
       where: {
         OR: [
           {
@@ -111,7 +111,7 @@ router
       });
     } else if (req.body.sender === curUser.id) {
       const data = req.body;
-      const newRequest = await prisma.friendRequests.create({
+      const newRequest = await prisma.social_friendRequests.create({
         data,
       });
       res.status(201).json({ message: "Friend request sent successfully!", newRequest });
@@ -128,13 +128,13 @@ router.delete("/friendRequests/:id/:sender/:recipient", checkAuthMiddleWare, asy
   const id = Number(req.params.id);
   const sender = Number(req.params.sender);
   const recipient = Number(req.params.recipient);
-  const curUser = await prisma.users.findUnique({
+  const curUser = await prisma.social_users.findUnique({
     where: {
       username: req.token.username,
     },
   });
   if (sender === curUser.id || recipient === curUser.id) {
-    const deletedRequest = await prisma.friendRequests.delete({
+    const deletedRequest = await prisma.social_friendRequests.delete({
       where: {
         id,
       },
@@ -152,18 +152,18 @@ router.delete("/friendRequests/:id/:sender/:recipient", checkAuthMiddleWare, asy
 router
   .route("/blockList")
   .get(async (req, res) => {
-    const blockList = await prisma.blockList.findMany();
+    const blockList = await prisma.social_blockList.findMany();
     res.json(blockList);
   })
   .post(checkAuthMiddleWare, async (req, res) => {
     const blocker = req.body.blocker;
     const blocked = req.body.blocked;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const duplicates = await prisma.blockList.findMany({
+    const duplicates = await prisma.social_blockList.findMany({
       where: {
         blocker,
         blocked,
@@ -178,7 +178,7 @@ router
       });
     } else if (curUser.id === blocker) {
       const data = req.body;
-      const newBlockedUser = await prisma.blockList.create({
+      const newBlockedUser = await prisma.social_blockList.create({
         data,
       });
       res.status(201).json({ message: "User blocked successfully!", newBlockedUser });
@@ -194,13 +194,13 @@ router
 router.delete("/blockList/:id/:blocker", checkAuthMiddleWare, async (req, res) => {
   const id = Number(req.params.id);
   const blocker = Number(req.params.blocker);
-  const curUser = await prisma.users.findUnique({
+  const curUser = await prisma.social_users.findUnique({
     where: {
       username: req.token.username,
     },
   });
   if (curUser.id === blocker) {
-    const deletedBlock = await prisma.blockList.delete({
+    const deletedBlock = await prisma.social_blockList.delete({
       where: {
         id,
       },

@@ -7,17 +7,17 @@ const prisma = require("./prisma");
 router
   .route("/dislikes")
   .get(async (req, res) => {
-    const dislikes = await prisma.dislikes.findMany();
+    const dislikes = await prisma.social_dislikes.findMany();
     res.json(dislikes);
   })
   .post(checkAuthMiddleWare, async (req, res) => {
     console.log(req.body);
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const alreadyDisliked = await prisma.dislikes.findMany({
+    const alreadyDisliked = await prisma.social_dislikes.findMany({
       where: {
         postID: req.body.postID,
         userID: curUser.id,
@@ -32,7 +32,7 @@ router
       });
     }
     if (curUser.id === req.body.userID) {
-      const dislike = await prisma.dislikes.create({
+      const dislike = await prisma.social_dislikes.create({
         data: req.body,
       });
       res.status(201).json({ message: "Post disliked successfully.", dislike });
@@ -50,12 +50,12 @@ router
   .route("/dislikes/:id")
   .get(checkAuthMiddleWare, async (req, res) => {
     const id = req.params.id;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const dislike = await prisma.dislikes.findUnique({
+    const dislike = await prisma.social_dislikes.findUnique({
       where: {
         id: Number(id),
       },
@@ -71,18 +71,18 @@ router
   })
   .delete(checkAuthMiddleWare, async (req, res) => {
     const id = req.params.id;
-    const curUser = await prisma.users.findUnique({
+    const curUser = await prisma.social_users.findUnique({
       where: {
         username: req.token.username,
       },
     });
-    const curDislike = await prisma.dislikes.findUnique({
+    const curDislike = await prisma.social_dislikes.findUnique({
       where: {
         id: Number(id),
       },
     });
     if (curUser.id === curDislike.userID) {
-      const dislike = await prisma.dislikes.delete({
+      const dislike = await prisma.social_dislikes.delete({
         where: {
           id: Number(id),
         },
